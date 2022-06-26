@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Game By Radouan </title>
+    <!--<link rel="stylesheet" href="jquery.mobile-1.4.5.min.css">
+  <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+  <script type="text/javascript" src="jquery-1.11.3.min.js"></script> 
+  <script type="text/javascript" src="jquery.mobile-1.4.5.min.js"></script>
+  -->
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+
+  <style>
+    #btn{
+    width:94%;
+    color:red;
+    font-size: 19px;
+  }
+  #btn:active{
+    background-color: tomato;
+    color:white
+  }
+  #result{
+    font-size: 14px;
+  }
+ </style>
+     <script type="text/javascript" >
+  $(document).on("pagecreate","#page1",function(){
+    
+    function decToBin(dec){
+       return dec?(dec>>>0).toString(2):null;
+    }
+    function binToDec(bin){
+       return bin?parseInt(bin,2).toString(10):null;
+     }
+     //function qui compte le 1 dans une chaîne du caractère 
+     function MS(msqq){
+       var mss = Array.from(msqq);
+       var ms = mss.filter(function(x){
+         return x==1;
+       }).length;
+       return ms;
+     }
+     //function qui retourne le nombre du octect de la partie hôte et le masque ID
+    function Msq(masq){
+      var Ms = [4,32];
+      for(var i=0;i<4;i++){
+        if(masq[i]<255){
+          Ms[0] = i;
+          Ms[1] = (i*8)+MS(decToBin(masq[i]));
+          break;
+        }
+      }
+      return Ms;
+    }
+    $("#result").hide();
+    $("#btn").click(function(){
+    var ip; //adresse ip
+    var msq;//masque du réseau
+    var aD=[];//adresse du diffusion
+    var aSR=[]; //adresse du réseau
+    var pR=[];//partie réseau
+    var pH=[];//partie Hôte;
+    var maSq=[];//info du masque
+    var nbrH;//nombre de hôtes 
+    var nbrSR;//nombre de sous réseau
+    var hNSR;//html de nbr de sous réseau
+    var hNH;//html de nbr de hôte
+    var hAD;//html de réponse
+    var aVI=[];
+    var aVS=[];
+     ip = $("#ip").val()||"1.0.0.0";
+     msq = $("#msq").val()||"1.0.0.0";
+     var vl = ValidateIPaddress(ip) && ValidateIPaddress(msq) ;
+     function ValidateIPaddress(ipaddress){ 
+     if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress)) {  
+        return (true)  
+       }  
+       alert("You have entered an invalid IP address or invalid masque !")  
+        return (false)  
+     }   
+     $("#result").html("");
+     $("#result").hide();
+  if(vl){
+     ip= ip.split(".");
+     msq = msq.split(".");
+     maSq = Msq(msq);
+     var ipB=[];
+     var msqB=[];
+     
+     //transfer l'adresse ip et le masque en binaire
+     for(var i=0;i<4;i++){
+     ipB[i]=(decToBin(ip[i])).padStart(8,"0");
+     msqB[i]=(decToBin(msq[i])).padStart(8,"0");
+     }
+     hAD = "*En décimale : <br>ip &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp: "+ip.join(".")+"<br> masque : "+msq.join(".")+"<br>*En binaire : <br>ip &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp: "+ipB.join(".")+"<br> masque : "+msqB.join(".");
+     //déterminer la partie réseau
+     for(var i=0;i<maSq[0];i++){
+       pR.push(ipB[i]);
+     }
+     //déterminer la partie hôte
+     for(var i=maSq[0];i<4;i++){
+       pH.push(ipB[i]);
+     }
+     //déterminer l'adresse de sous réseau avec et logique entre ip et masque
+     for(var i=0;i<4;i++){
+     aSR.push(ip[i] & msq[i]);
+     }
+     for(var i=0;i<3;i++)
+     aVI[i] =aSR[i];
+     aVI[3] = parseInt(aSR[3])+1;
+     aSR = aSR.join(".");
+     aVI = aVI.join(".");
+     var aDD = ipB.join("");
+     //determiner l'adresse de diffusion
+     for(var i=0;i<maSq[1];i++){
+       aD.push(aDD[i]);
+     }
+     for(var i=0;i<(32-maSq[1]);i++){
+       aD.push(1);
+     }
+     var D =[];
+     //determiner le nombre du hôte
+     hNH = "2^(32-"+maSq[1]+")-2";
+     nbrH = Math.pow(2,(32-maSq[1]))-2;
+     //determiner le nombre de sous réseau
+     hNSR = "2^("+maSq[1]+"-"+(maSq[0]*8)+")";
+     nbrSR = Math.pow(2,(maSq[1]-(maSq[0]*8)));
+     //ajoute les point(.) à l'adresse
+     for(var i=0;i<32;i++){
+       if(i%8==0&&i!=0)
+         D.push(".");
+         D.push(aD[i]);
+     }
+     D = D.join("").split(".");
+     aD=[];
+     //converter l'adresse de diffusion en décimale
+     for(var i=0;i<4;i++){
+     aD[i] = binToDec(D[i]);
+     if(i<3)
+     aVS[i] = binToDec(D[i]);
+     else
+     aVS[i] = binToDec(D[i])-1;
+     }
+    aD = aD.join(".");
+    aVS = aVS.join(".");
+    $("#result").show();
+   $("#result").html(hAD+"<br>adresse de sous réseau = "+aSR+"<br> adresse de diffusion &nbsp &nbsp &nbsp = "+aD+"<br> la plage des adresses valides :<br>[ "+aVI+" - "+aVS+" ]<br>nombre de sous réseau = "+hNSR+" = "+nbrSR+"<br> nombre de Hôte = "+hNH+" = "+nbrH);
+  }
+    });
+  });
+  </script>
+ </head>
+ <body>
+       <div data-role="page" id="page1">
+  <div data-role="header">
+  <span><button id="btn" class="mx-3">start</button> </span>
+  </div>
+  
+  <div data-role="main" class="ui-content lettre">
+  <form >
+    <label for="ip">ip:</label>
+ <input id="ip" class="form-controls ipt" type="text" >
+ <label for="msq">masque:</label>
+  <input id="msq" class="form-controls ipt" type="text">
+    </form>
+  <div class="alert alert-danger" id="result"></div>
+
+</div>
+
+</div>
+ </body>
+ </html>
