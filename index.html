@@ -4,18 +4,18 @@
   <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Game By Radouan </title>
-    <!--<link rel="stylesheet" href="jquery.mobile-1.4.5.min.css">
+  <title>Radouan R&eacute;seau</title>
+<!--<link rel="stylesheet" href="jquery.mobile-1.4.5.min.css">
   <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
   <script type="text/javascript" src="jquery-1.11.3.min.js"></script> 
   <script type="text/javascript" src="jquery.mobile-1.4.5.min.js"></script>
--->
+   --> 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
 <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
 <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 
-  <style>
+  <style type="text/css" >
     #btn{
     width:94%;
     color:red;
@@ -71,11 +71,12 @@
     var nbrSR;//nombre de sous réseau
     var hNSR;//html de nbr de sous réseau
     var hNH;//html de nbr de hôte
-    var hAD;//html de réponse
-    var aVI=[];
-    var aVS=[];
-     ip = $("#ip").val()||"1.0.0.0";
-     
+    var hAD;//html de réponse 
+    var typeAd;//le type d'adresse
+    var aVI=[];//première adresse du plage
+    var aVS=[];//dernière adresse du plage
+     ip = $("#ip").val()||"0";
+    //déterminer le masque à partir du Id (/x) : x entre 0 et 32
      function wichMsq(id){
        var masqq=[];
        var massq=[];
@@ -94,11 +95,12 @@
      }
      return massq.join(".");
      }
-     msq = $("#msq").val()||"1.0.0.0";
+     msq = $("#msq").val()||"0";
      var Ip = ip.split("/")[0];
      msq = wichMsq(ip.split("/")[1]);
-     $("#msq").val(msq);
-     var vl = ValidateIPaddress(ip) && ValidateIPaddress(msq) ;
+     
+     //tester si l'adresse ip et le masque sont valides
+     var vl = ValidateIPaddress(ip) && ValidateIPaddress(msq);
      function ValidateIPaddress(ipaddress){ 
      if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\/(3[0-2]|2[0-9]|1[0-9]|0[0-9]))?$/.test(ipaddress)) {  
         return (true)  
@@ -106,21 +108,35 @@
        alert("You have entered an invalid IP address or invalid masque !")  
         return (false)  
      }   
+     
      $("#result").html("");
      $("#result").hide();
   if(vl){
+    $("#msq").val(msq);
      ip = Ip.split(".");
      msq = msq.split(".");
      maSq = Msq(msq);
      var ipB=[];
      var msqB=[];
-     
+     //déterminer le type d'adresse (privée ou public)
+     function Type(ip){
+        var ippp=[];
+        for(var i=0;i<4;i++)
+        ippp[i] = ip[i].padStart(3,"0");
+        var ipp = ippp.join("");
+       if((ipp>=10000000000 && ipp <=10255255255) ||(ipp>=172016000000 && ipp <=172031255255) ||(ipp>=192168000000 && ipp <=192168255255))
+         var type = "privée";
+       else 
+         var type = "public";
+       return type;
+     }
+     typeAd = Type(ip);
      //transfer l'adresse ip et le masque en binaire
      for(var i=0;i<4;i++){
      ipB[i]=(decToBin(ip[i])).padStart(8,"0");
      msqB[i]=(decToBin(msq[i])).padStart(8,"0");
      }
-     hAD = "*En décimale : <br>ip &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp: "+ip.join(".")+"<br> masque : "+msq.join(".")+"<br>*En binaire : <br>ip &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp: "+ipB.join(".")+"<br> masque : "+msqB.join(".");
+     hAD = "=> En décimale : <br>ip &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp: "+ip.join(".")+"<br> masque : "+msq.join(".")+"<br>=> En binaire : <br>ip &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp: "+ipB.join(".")+"<br> masque : "+msqB.join(".");
      //déterminer la partie réseau
      for(var i=0;i<maSq[0];i++){
        pR.push(ipB[i]);
@@ -172,7 +188,7 @@
     aD = aD.join(".");
     aVS = aVS.join(".");
     $("#result").show();
-   $("#result").html(hAD+"<br>. adresse de sous réseau = "+aSR+"<br>. adresse de diffusion &nbsp &nbsp &nbsp = "+aD+"<br>. la plage des adresses valides :<br>[ "+aVI+" - "+aVS+" ]<br>. nombre de sous réseau = "+hNSR+" = "+nbrSR+"<br>. nombre de Hôte = "+hNH+" = "+nbrH);
+   $("#result").html(hAD+"<br>=> Type d'adresse : "+typeAd+"<br>=> Adresse de sous réseau : "+aSR+"<br>=> Adresse de diffusion &nbsp &nbsp &nbsp : "+aD+"<br>=> La plage des adresses valides :<br>[ "+aVI+" - "+aVS+" ]<br>=> Nombre de sous réseau = "+hNSR+" = "+nbrSR+"<br>=> Nombre de Hôte = "+hNH+" = "+nbrH);
   }
     });
   });
